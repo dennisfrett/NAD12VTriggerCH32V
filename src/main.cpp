@@ -33,7 +33,7 @@ void SetupOtherPins() {
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
 
   GPIO_Init(GPIOA, &GPIO_InitStructure);
-  GPIO_Init(GPIOC, &GPIO_InitStructure);
+  GPIO_Init(GPIOD, &GPIO_InitStructure);
 }
 
 // Initialize pin D0 as external interrupt.
@@ -44,14 +44,8 @@ void InitializeInterrupt() {
 
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO | RCC_APB2Periph_GPIOC, ENABLE);
 
-  // C1 is input, pulldown.
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_Init(GPIOC, &GPIO_InitStructure);
-
-  // C2 is input, pulldown.
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
+  // Configure all pins ass input pull down.
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_Init(GPIOC, &GPIO_InitStructure);
