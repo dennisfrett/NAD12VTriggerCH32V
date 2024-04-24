@@ -3,7 +3,7 @@
 
 #include "nectransmitter.h"
 
-#define DEBUG_MODE
+// #define DEBUG_MODE
 
 NECTransmitter necTransmitter;
 
@@ -11,16 +11,16 @@ extern "C" void EXTI7_0_IRQHandler(void)
     __attribute__((interrupt("WCH-Interrupt-fast")));
 
 extern "C" void EXTI7_0_IRQHandler(void) {
-  if (EXTI_GetITStatus(EXTI_Line0) != RESET) {
-    EXTI_ClearITPendingBit(EXTI_Line0); // Clear flag
-  }
-
   if (EXTI_GetITStatus(EXTI_Line1) != RESET) {
     EXTI_ClearITPendingBit(EXTI_Line1); // Clear flag
   }
+
+  if (EXTI_GetITStatus(EXTI_Line2) != RESET) {
+    EXTI_ClearITPendingBit(EXTI_Line2); // Clear flag
+  }
 }
 
-// Configure all pins on peripheral A and C to input pulldown to save maximum
+// Configure all pins on peripheral A and D to input pulldown to save maximum
 // power.
 void SetupOtherPins() {
   GPIO_InitTypeDef GPIO_InitStructure = {0};
@@ -36,7 +36,7 @@ void SetupOtherPins() {
   GPIO_Init(GPIOD, &GPIO_InitStructure);
 }
 
-// Initialize pin D0 as external interrupt.
+// Initialize pins C1 and C2 as external interrupt.
 void InitializeInterrupt() {
   GPIO_InitTypeDef GPIO_InitStructure = {0};
   EXTI_InitTypeDef EXTI_InitStructure = {0};
@@ -44,23 +44,23 @@ void InitializeInterrupt() {
 
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO | RCC_APB2Periph_GPIOC, ENABLE);
 
-  // Configure all pins ass input pull down.
+  // Configure all pins as input pull down.
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_Init(GPIOC, &GPIO_InitStructure);
 
-  // GPIOC1 ----> EXTI_Line0
+  // GPIOC1 ----> EXTI_Line1
   GPIO_EXTILineConfig(GPIO_PortSourceGPIOC, GPIO_PinSource1);
-  EXTI_InitStructure.EXTI_Line = EXTI_Line0;
+  EXTI_InitStructure.EXTI_Line = EXTI_Line1;
   EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
   EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
   EXTI_InitStructure.EXTI_LineCmd = ENABLE;
   EXTI_Init(&EXTI_InitStructure);
 
-  // GPIOC2 ----> EXTI_Line1
+  // GPIOC2 ----> EXTI_Line2
   GPIO_EXTILineConfig(GPIO_PortSourceGPIOC, GPIO_PinSource2);
-  EXTI_InitStructure.EXTI_Line = EXTI_Line1;
+  EXTI_InitStructure.EXTI_Line = EXTI_Line2;
   EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
   EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling;
   EXTI_InitStructure.EXTI_LineCmd = ENABLE;
@@ -91,7 +91,7 @@ void Setup() {
   InitializeInterrupt();
   SetupOtherPins();
 
-  necTransmitter.Init(GPIOC, RCC_APB2Periph_GPIOC, GPIO_Pin_0);
+  necTransmitter.Init(GPIOD, RCC_APB2Periph_GPIOD, GPIO_Pin_2);
 }
 
 // Goes into standby and returns when interrupt is triggered.
