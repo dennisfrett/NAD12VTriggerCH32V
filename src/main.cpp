@@ -5,16 +5,23 @@
 
 // #define DEBUG_MODE
 
+volatile bool overridden = false;
+
 NECTransmitter necTransmitter;
 
 extern "C" void EXTI7_0_IRQHandler(void)
     __attribute__((interrupt("WCH-Interrupt-fast")));
 
 extern "C" void EXTI7_0_IRQHandler(void) {
+
+  // Override button interrupt.
   if (EXTI_GetITStatus(EXTI_Line1) != RESET) {
     EXTI_ClearITPendingBit(EXTI_Line1); // Clear flag
+
+    overridden = true;
   }
 
+  // 12V trigger interrupt.
   if (EXTI_GetITStatus(EXTI_Line2) != RESET) {
     EXTI_ClearITPendingBit(EXTI_Line2); // Clear flag
   }
@@ -50,6 +57,7 @@ void InitializeInterrupt() {
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_Init(GPIOC, &GPIO_InitStructure);
 
+  // Override button.
   // GPIOC1 ----> EXTI_Line1
   GPIO_EXTILineConfig(GPIO_PortSourceGPIOC, GPIO_PinSource1);
   EXTI_InitStructure.EXTI_Line = EXTI_Line1;
@@ -58,6 +66,7 @@ void InitializeInterrupt() {
   EXTI_InitStructure.EXTI_LineCmd = ENABLE;
   EXTI_Init(&EXTI_InitStructure);
 
+  // 12V trigger pin.
   // GPIOC2 ----> EXTI_Line2
   GPIO_EXTILineConfig(GPIO_PortSourceGPIOC, GPIO_PinSource2);
   EXTI_InitStructure.EXTI_Line = EXTI_Line2;
@@ -114,16 +123,34 @@ void Standby() {
 #endif
 }
 
+/// Returns whether the trigger pin has the same value 300ms apart.
+bool DebounceValue() {
+
+  const auto val1 = GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_2);
+
+  Delay_Ms(300);
+
+  const auto val2 = GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_2);
+
+  return val1 == val2;
+}
+
 int main(void) {
   Setup();
 
   while (true) {
+    // Reset overriden.
+    overridden = false;
+
     Standby();
 
-    // Wake up NAD
-    necTransmitter.SendExtendedNEC(0x877C, 0x80);
+    if (overridden || DebounceValue()) {
 
-    // Wait a bit for stuff to settle down.
-    Delay_Ms(500);
+      // Toggle NAD.
+      necTransmitter.SendExtendedNEC(0x877C, 0x80);
+
+      // Wait a bit for stuff to settle down.
+      Delay_Ms(500);
+    }
   }
 }
