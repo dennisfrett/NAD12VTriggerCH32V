@@ -10,3 +10,6 @@ The Denon AVR has a 12V trigger output, that is high when it's on and low when i
 The NAD has an external IR in, which takes Extended NEC IR commands (without a carrier wave). Just connect a 3.5mm jack from the external IR input on the NAD to `D2`.
 
 The IR signal is sent with [this direct NEC transmitter library](https://github.com/dennisfrett/CH32V-Direct-NEC-Transmitter).
+
+
+![finished](https://github.com/user-attachments/assets/a54c109d-3b47-4f93-b10a-46e6772d3f42)
